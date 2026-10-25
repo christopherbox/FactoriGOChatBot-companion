@@ -11,6 +11,7 @@ local function log_message(msg)
 end
 
 local function check_force(force)
+    if not force or not force.valid then return false end
     for name in string.gmatch(settings.global["fgcb-allowed-forces"].value, "([^,]+)") do
         if force.name:lower() == name:lower() then
             return true
@@ -22,6 +23,7 @@ end
 script.on_event(
     defines.events.on_research_finished,
     function(event)
+        if not event.research or not event.research.valid then return end
         if not check_force(event.research.force) then return end
         local research_name = event.research.name
         log_message("[RESEARCH_FINISHED:" .. research_name .. "]")
@@ -31,6 +33,7 @@ script.on_event(
 script.on_event(
     defines.events.on_research_started,
     function(event)
+        if not event.research or not event.research.valid then return end
         if not check_force(event.research.force) then return end
         local research_name = event.research.name
         log_message("[RESEARCH_STARTED:" .. research_name .. "]")
@@ -40,6 +43,7 @@ script.on_event(
 script.on_event(
     defines.events.on_rocket_launched,
     function(event)
+        if not event.rocket or not event.rocket.valid then return end
         if not check_force(event.rocket.force) then return end
         storage.rocketLaunched = storage.rocketLaunched or 0
         storage.rocketLaunched = storage.rocketLaunched + 1
@@ -64,15 +68,14 @@ script.on_event(
     defines.events.on_pre_player_died,
     function(event)
         local player = game.get_player(event.player_index)
+        if not player or not player.valid then return end
         if not check_force(player.force) then return end
-        local cause = event.cause
         local causeText = ""
-        if event.cause then
+        if event.cause and event.cause.valid then
             causeText = event.cause.name
-        end
-
-        if causeText == "character" then
-            causeText = event.cause.player.name
+            if causeText == "character" and event.cause.player then
+                causeText = event.cause.player.name
+            end
         end
 
         local count, total = getAndStoreDeathCount(player.name, causeText)
@@ -88,4 +91,3 @@ end
 
 -- Run this on startup
 script.on_init(initStorage)
-
